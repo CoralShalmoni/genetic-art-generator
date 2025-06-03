@@ -77,7 +77,7 @@ Outputs generated:
 
 ## 🙏 Acknowledgments
 
-This project was developed as part of the Python programming course at Weizzman School of Science.🎓
+This project was developed as part of the Python programming course at Weizmann School of Science.🎓
 
 ---
 
