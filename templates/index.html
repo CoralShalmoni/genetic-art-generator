@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Genetic Art Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f2f2f2;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        form {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 600px;
+            margin: 0 auto 40px auto;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        textarea, input[type="file"], input[type="color"], input[type="number"] {
+            width: 100%;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .chunk {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 20px;
+            background-color: white;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        .chunk img {
+            max-width: 200px;
+            border-radius: 5px;
+        }
+        .chunk audio {
+            width: 250px;
+        }
+        pre {
+            max-width: 600px;
+            overflow-x: auto;
+            background: #f9f9f9;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+        label.color-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        .color-picker-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .color-picker-row label {
+            min-width: 120px;
+        }
+        .color-picker-row input[type="color"] {
+            width: 60px;
+            height: 30px;
+            padding: 0;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Genetic Art Generator</h1>
+
+    <form method="post" enctype="multipart/form-data">
+        <label>Upload DNA file:</label>
+        <input type="file" name="dna_file" /><br />
+
+        <label>Or paste DNA sequence:</label>
+        <textarea name="dna_text" rows="6"></textarea><br />
+
+        <h3>Customize Colors</h3>
+
+        <div class="color-picker-row">
+            <label for="color_A">A:</label>
+            <input type="color" id="color_A" name="color_A" value="#ff0000" />
+        </div>
+        <div class="color-picker-row">
+            <label for="color_C">C:</label>
+            <input type="color" id="color_C" name="color_C" value="#00ff00" />
+        </div>
+        <div class="color-picker-row">
+            <label for="color_T">T:</label>
+            <input type="color" id="color_T" name="color_T" value="#0000ff" />
+        </div>
+        <div class="color-picker-row">
+            <label for="color_G">G:</label>
+            <input type="color" id="color_G" name="color_G" value="#ffff00" />
+        </div>
+        <div class="color-picker-row">
+            <label for="color_N">Padding (N):</label>
+            <input type="color" id="color_N" name="color_N" value="#cccccc" />
+        </div>
+
+        <h3>Music Settings</h3>
+        <label for="tempo">Tempo (BPM):</label>
+        <input type="number" id="tempo" name="tempo" min="30" max="300" value="120" />
+
+        <button type="submit">Generate</button>
+    </form>
+
+    {% if paired_results %}
+        <h2 style="text-align: center;">Generated Chunks</h2>
+        {% for pair in paired_results %}
+            <div class="chunk">
+                <div>
+                    <h3>
+                        Chunk {{ pair.chunk_index }} (Bases {{ pair.start_base }}–{{ pair.end_base }})
+                    </h3>
+                    <pre>{{ pair.sequence }}</pre>
+                    <img src="{{ url_for('pixel_art', filename=pair.img) }}" alt="Pixel Art" />
+                    <p>{{ pair.img }}</p>
+                </div>
+                <div>
+                    <h4>Music</h4>
+                    <audio controls>
+                        <source src="{{ url_for('music', filename=pair.midi) }}" type="audio/midi" />
+                        Your browser does not support the audio element.
+                    </audio>
+                    <br />
+                    <a href="{{ url_for('music', filename=pair.midi) }}" download>Download {{ pair.midi }}</a>
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
+</body>
+</html>

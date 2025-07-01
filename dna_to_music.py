@@ -1,46 +1,22 @@
-from midiutil import MIDIFile
-import sys
-import subprocess
-import os
+from mido import Message, MidiFile, MidiTrack, MetaMessage
 
-BASE_NOTES = {
-    'A': 60,  # C4
-    'C': 62,  # D4
-    'T': 64,  # E4
-    'G': 65,  # F4
-    'N': 67,  # G4 — padding note
-}
+def sequence_to_midi(sequence, save_path='output.mid', tempo=120):
+    midi = MidiFile()
+    track = MidiTrack()
+    midi.tracks.append(track)
 
-def play_file(filepath):
-    if sys.platform.startswith('darwin'):  # macOS
-        subprocess.call(['open', filepath])
-    elif sys.platform.startswith('win'):   # Windows
-        os.startfile(filepath)
-    elif sys.platform.startswith('linux'): # Linux
-        subprocess.call(['xdg-open', filepath])
-    else:
-        print(f"Cannot open files automatically on OS: {sys.platform}")
+    # Convert BPM to microseconds per beat for MIDI tempo meta message
+    microseconds_per_beat = int(60_000_000 / tempo)
+    track.append(MetaMessage('set_tempo', tempo=microseconds_per_beat))
 
-def sequence_to_midi(sequence, save_path="assets/music/output.mid", tempo=120):
-    midi = MIDIFile(1)
-    track = 0
-    time = 0
-    midi.addTrackName(track, time, "DNA Melody")
-    midi.addTempo(track, time, tempo)
+    # Map DNA bases to MIDI note numbers (example)
+    note_map = {'A': 60, 'C': 62, 'T': 64, 'G': 65, 'N': 67}  # middle C and others
 
-    channel = 0
-    volume = 100
-    duration = 1
+    note_length = 480  # ticks per note (quarter note length)
 
     for base in sequence:
-        note = BASE_NOTES.get(base)
-        if note:
-            midi.addNote(track, channel, note, time, duration, volume)
-        time += 1
+        note = note_map.get(base, 67)  # default to 67 if base unknown
+        track.append(Message('note_on', note=note, velocity=64, time=0))
+        track.append(Message('note_off', note=note, velocity=64, time=note_length))
 
-    with open(save_path, "wb") as output_file:
-        midi.writeFile(output_file)
-
-    abs_path = os.path.abspath(save_path)
-    print(f"MIDI saved to {abs_path}")
-    play_file(abs_path)
+    midi.save(save_path)

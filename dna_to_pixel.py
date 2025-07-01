@@ -1,46 +1,50 @@
 from PIL import Image
-import os
+import matplotlib.colors as mcolors
+import math
 
-# Map bases to RGB colors
-BASE_COLORS = {
-    'A': (255, 0, 0),    # Red
-    'C': (0, 255, 0),    # Green
-    'T': (0, 0, 255),    # Blue
-    'G': (255, 255, 0),  # Yellow
-    'N': (192, 192, 192) # Light gray for padding
-}
-
-
-def sequence_to_image(sequence, image_size=(16,16), pixel_size=20, save_path="assets/pixel_art/output.png"):
+def sequence_to_image(sequence, save_path='output.png', color_map=None):
     """
-    Convert a DNA sequence to a pixel art image.
+    Converts a DNA sequence into pixel art image with larger visible pixels.
 
     Args:
-        sequence (str): Clean DNA sequence (only A,C,T,G).
-        image_size (tuple): (width, height) in pixels.
-        pixel_size (int): Size of each pixel block.
-        save_path (str): Where to save the image.
+        sequence (str): DNA sequence (e.g. "ACTGNNN...")
+        save_path (str): Path to save the PNG image
+        color_map (dict): Map base to hex color string (e.g. '#ff0000')
+
     """
-    width, height = image_size
-    img = Image.new('RGB', (width * pixel_size, height * pixel_size), color=(255,255,255))
+
+    if color_map is None:
+        color_map = {
+            'A': '#ff0000',  # red
+            'C': '#00ff00',  # green
+            'T': '#0000ff',  # blue
+            'G': '#ffff00',  # yellow
+            'N': '#cccccc'   # gray for padding
+        }
+
+    # Convert hex colors to RGB tuples (0-255)
+    rgb_map = {}
+    for base, hex_color in color_map.items():
+        rgb = tuple(int(255 * c) for c in mcolors.to_rgb(hex_color))
+        rgb_map[base] = rgb
+
+    length = len(sequence)
+    size = max(16, math.ceil(math.sqrt(length)))  # minimum 16x16 grid
+
+    PIXEL_SIZE = 10  # pixels per base block
+    img_size = size * PIXEL_SIZE
+
+    img = Image.new('RGB', (img_size, img_size), color=(255, 255, 255))
+    pixels = img.load()
 
     for i, base in enumerate(sequence):
-        x = (i % width) * pixel_size
-        y = (i // width) * pixel_size
+        x = (i % size) * PIXEL_SIZE
+        y = (i // size) * PIXEL_SIZE
 
-        color = BASE_COLORS.get(base, (0,0,0))  # Default black if unknown base
+        color = rgb_map.get(base, (0, 0, 0))
 
-        for px in range(pixel_size):
-            for py in range(pixel_size):
-                img.putpixel((x + px, y + py), color)
+        for dx in range(PIXEL_SIZE):
+            for dy in range(PIXEL_SIZE):
+                pixels[x + dx, y + dy] = color
 
-    abs_path = os.path.abspath(save_path)
-    img.save(abs_path)
-    print(f"Image saved to {abs_path}")
-    img.show()
-
-
-# Example usage
-if __name__ == "__main__":
-    test_sequence = "ACTG" * 64  # 256 bases
-    sequence_to_image(test_sequence)
+    img.save(save_path)
